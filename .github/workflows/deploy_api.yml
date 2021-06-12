@@ -1,0 +1,31 @@
+name: Deploy API to Github Pages
+
+on:
+  push:
+    branches: [database] # every pull request merge is a push, so no extra event needed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # get current source
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          ref: database
+
+      - name: Install jq (json command line processor)
+        run: sudo apt update && sudo apt install jq
+
+      - name: Create disttribution folder
+        run: mkdir -p dist_api/api
+
+      - name: Concatenate all files in modules folder to a single file
+        run: jq -s 'reduce .[] as $item ({}; . * $item)' items/* > dist_api/api/index.json
+
+      - name: Deploy to Github Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: dist_api
